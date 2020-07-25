@@ -73,23 +73,25 @@ int mimic_original_donut() {
         // float yContinuous = circleX * (sinB * cosPhi - sinA * cosB * sinPhi) + sinTheta * cosA * cosB;
         // float xContinuous = (cosPhi * circleX);
         // float yContinuous = -(sinPhi * circleX);
-        sinA = -sinA; // changes the direction of the A rotation to match the original
-        sinB = -sinB; // changes the direction of the B rotation to match the original
+        // sinA = -sinA; // changes the direction of the A rotation to match the original
+        // sinB = -sinB; // changes the direction of the B rotation to match the original
         float xContinuous = sinB * (sinA * sinTheta - circleX * cosA * sinPhi) + circleX * cosB * cosPhi;
         float yContinuous = cosB * (sinA * sinTheta - circleX * cosA * sinPhi) - circleX * sinB * cosPhi;
         float ooz = 1 / (cosA * sinTheta + circleX * sinA * sinPhi + 5);
 
         int x = 40 + 30 * ooz * xContinuous, // x is the x value on the screen
-            y = 12 + 15 * ooz * yContinuous, // y is the y value on the screen
+            y = 24 - (12 + 15 * ooz * yContinuous), // y is the y value on the screen
             o = x + 80 * y;
         // float L = cosPhi*cosTheta*sinB - cosA*cosTheta*sinPhi - sinA*sinTheta + cosB*(cosA*sinTheta - cosTheta*sinA*sinPhi);
-        float L = sinA * (cosPhi * sinTheta - cosTheta * sinPhi) - sinB * (cosPhi * cosTheta + sinPhi * sinTheta) + cosA * cosB * (cosPhi * sinTheta - cosTheta * sinPhi);
+        // float L = sinA * (cosPhi * sinTheta - cosTheta * sinPhi) - sinB * (cosPhi * cosTheta + sinPhi * sinTheta) + cosA * cosB * (cosPhi * sinTheta - cosTheta * sinPhi);
+        // float L = cosB * (sinA * sinTheta - cosA * cosTheta * sinPhi) - cosA * sinTheta - sinB * cosPhi * cosTheta - sinA * cosTheta * sinPhi;
+        float L = cosB * (sinA * sinTheta - cosA * cosTheta * sinPhi) - cosA * sinTheta - sinB * cosPhi * cosTheta - sinA * cosTheta * sinPhi;
         if (22 > y && y > 0 && x> 0 && 80 > x && ooz > zbuffer[o]) {
           zbuffer[o] = ooz;
           // assign a character for 
           // light level. N is dot product of surface normal with (x=0, y=1,
           // z=-1)
-          int luminance_index = 8 * L;
+          int luminance_index = 8* L;
           output[o] = ".,-~:;=!*#$@"[luminance_index > 0 ? luminance_index : 0]; 
         }
       }
@@ -120,6 +122,8 @@ phirot = [cos(phi), -sin(phi), 0; sin(phi), cos(phi), 0; 0, 0, 1]
 Arot = [1, 0, 0; 0, cos(A), -sin(A); 0, sin(A), cos(A)]
 Brot = [cos(B), -sin(B), 0; sin(B), cos(B), 0; 0, 0, 1]
 
-normal_prerot = [cos(theta), sin(theta), 0]
+normal_prerot = [cos(theta), 0, sin(theta)]
+normal_vector = normal_prerot * phirot * Arot * Brot
+luminance = normal_vector * [0; 1; -1]
 
 */
