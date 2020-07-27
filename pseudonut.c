@@ -1,13 +1,13 @@
 // https://www.a1k0n.net/2011/07/20/donut-math.html
 // gcc -o pseudonut pseudonut.c -lm
 // like the pseudo-code on the site
-// goals: sphere with rotating light source, translate donut but not rotation
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
 int k;
 double sin(), cos();
+// exactly like pseudocode
 int vanilla() {
   float A = 0, B = 0, phi, theta, zbuffer[1760];
   char output[1760];
@@ -52,8 +52,8 @@ int vanilla() {
   }
 }
 
+// exactly like donut.c
 int mimic_original_donut() {
-  // cos(B)*(sin(phi)*sin(theta) + circleX*cos(phi)) + cos(A)*sin(B)*(cos(phi)*sin(theta) - circleX*sin(phi))
   float A = 0, B = 0, phi, theta, zbuffer[1760];
   char output[1760];
   printf("\x1b[2J");
@@ -99,11 +99,12 @@ int mimic_original_donut() {
 }
 
 int rotating_light_source() {
-  // cos(B)*(sin(phi)*sin(theta) + circleX*cos(phi)) + cos(A)*sin(B)*(cos(phi)*sin(theta) - circleX*sin(phi))
-  float A, B = 0, phi, theta, zbuffer[1760];
-  float C, D, E = 0; // these are like A and B, but they rotate the light source
+  float A = 0, B = 0, phi, theta, zbuffer[1760];
+  float C = 0, D = 0, E = 0; // these are like A and B, but they rotate the light source
   char output[1760];
-  printf("\x1b[2J");
+  float L;
+  int luminance_index;
+  // printf("\x1b[2J");
   for (;;) {
     memset(output, 32, 1760); // set all chars in output to ascii #32 (space)
     memset(zbuffer, 0, 7040);  // set all floats in z buffer to 0 (infinite distance from camera)
@@ -126,17 +127,14 @@ int rotating_light_source() {
 
         // float L = cosB * (sinA * sinTheta - cosA * cosTheta * sinPhi) - cosA * sinTheta - sinB * cosPhi * cosTheta - sinA * cosTheta * sinPhi;
         float sinC = sin(C), cosC = cos(C), sinD = sin(D), cosD = cos(D), sinE = sin(E), cosE = cos(E);
-        float L = (sinE*(cosC - sinC) + cosE*sinD*(cosC + sinC))*(sinB*(sinA*sinTheta - cosA*cosTheta*sinPhi) + cosB*cosPhi*cosTheta) + (cosE*(cosC - sinC) - sinD*sinE*(cosC + sinC))*(cosB*(sinA*sinTheta - cosA*cosTheta*sinPhi) - cosPhi*cosTheta*sinB) - cosD*(cosC + sinC)*(cosA*sinTheta + cosTheta*sinA*sinPhi);
-        // float L = cosB*(sinA*sinTheta - cosA*cosTheta*sinPhi) - cosD*(cosA*sinTheta + cosTheta*sinA*sinPhi) + sinD*(sinB*(sinA*sinTheta - cosA*cosTheta*sinPhi) + cosB*cosPhi*cosTheta) - cosPhi*cosTheta*sinB;
-        // float L = cosB*(sinA*sinTheta - cosA*cosTheta*sinPhi) - (cosA*sinTheta + cosTheta*sinA*sinPhi)*(cosD - sinD) + (cosD + sinD)*(sinB*(sinA*sinTheta - cosA*cosTheta*sinPhi) + cosB*cosPhi*cosTheta) - cosPhi*cosTheta*sinB
- ;
-        
+        L = (sinE*(cosC - sinC) + cosE*sinD*(cosC + sinC))*(sinB*(sinA*sinTheta - cosA*cosTheta*sinPhi) + cosB*cosPhi*cosTheta) + (cosE*(cosC - sinC) - sinD*sinE*(cosC + sinC))*(cosB*(sinA*sinTheta - cosA*cosTheta*sinPhi) - cosPhi*cosTheta*sinB) - cosD*(cosC + sinC)*(cosA*sinTheta + cosTheta*sinA*sinPhi);
+
         if (22 > y && y > 0 && x> 0 && 80 > x && ooz > zbuffer[o]) {
           zbuffer[o] = ooz;
           // assign a character for 
           // light level. N is dot product of surface normal with (x=0, y=1,
           // z=-1)
-          int luminance_index = 8 * L;
+          luminance_index = 8 * L;
           output[o] = ".,-~:;=!*#$@"[luminance_index > 0 ? luminance_index : 0]; 
         }
       }
@@ -147,13 +145,13 @@ int rotating_light_source() {
            // arr unless we're at the end of an 80 char row A += 0.04; // rotate around
            // the x axis (rolls towards the camera) B += 0.02; // rotate around the z
            // axis (clockwise from camera's perspective)
-    // A += 0.04;  // rotate around the x axis (rolls towards the camera)
-    // B += 0.02;  // rotate around the z axis (clockwise from camera's perspective)
+    A += 0.04;  // rotate around the x axis (rolls towards the camera)
+    B += 0.02;  // rotate around the z axis (clockwise from camera's perspective)
 
     // rotate the light source
     C += 0.04;
     D += 0.02;
-    // E += 0.03;
+    E += 0.03;
   }
 }
 
@@ -161,6 +159,10 @@ int main() {
   // vanilla();
   // mimic_original_donut();
   rotating_light_source();
+  // float C, D, E = 0; // these are like A and B, but they rotate the light source
+  // printf("%f, %f, %f\n", C, D, E);
+  // float F, G, H, I, J, K, l, M, O, P = 0;
+  // printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", F, G, H, I, J, K, l, M, O, P);
 }
 
 /* some matlab code I used to do symbolic matrix math
@@ -200,7 +202,24 @@ Crot = [1, 0, 0; 0, cosC, -sinC; 0, sinC, cosC] % x axis
 Drot = [cosD, 0, sinD; 0, 1, 0; -sinD, 0, cosD] % y axis
 Erot = [cosE, -sinE, 0; sinE, cosE, 0; 0, 0, 1] % z axis
 light_vector = [0, 1, -1] * Crot * Drot * Erot
-light_vector = [1, 1, -1] * Drot
+light_vector = [0, 1, -1] * Drot
+luminance = dot(normal_vector, light_vector)
+
+% static donut, moving light source around y
+syms sinTheta cosTheta sinPhi cosPhi sinA cosA sinB cosB circleX sinC cosC sinD cosD sinE cosE real
+
+prerot = [circleX, 0, sinTheta]
+phirot = [cosPhi, -sinPhi, 0; sinPhi, cosPhi, 0; 0, 0, 1]
+
+normal_prerot = [cosTheta, 0, sinTheta]
+normal_vector = normal_prerot * phirot
+
+% rotating light source
+Crot = [1, 0, 0; 0, cosC, -sinC; 0, sinC, cosC] % x axis
+Drot = [cosD, 0, sinD; 0, 1, 0; -sinD, 0, cosD] % y axis
+Erot = [cosE, -sinE, 0; sinE, cosE, 0; 0, 0, 1] % z axis
+% light_vector = [0, 1, -1] * Crot * Drot * Erot
+light_vector = [0, 1, -1] * Drot
 luminance = dot(normal_vector, light_vector)
 
 */
